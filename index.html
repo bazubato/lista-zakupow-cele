@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>Moje listy</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Moje listy" />
+<meta name="theme-color" content="#F6F2EA" />
+
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #F6F2EA;
+    font-family: 'Nunito', system-ui, sans-serif;
+    color: #3A3226;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  body {
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+    padding-top: calc(env(safe-area-inset-top) + 20px);
+  }
+  .wrap { max-width: 460px; margin: 0 auto; padding-bottom: 40px; }
+
+  /* Zakładki typu listy */
+  .tabs {
+    display: flex; gap: 6px; background: #EDE6D6; padding: 4px;
+    border-radius: 14px; margin-bottom: 18px;
+  }
+  .tab {
+    flex: 1; border: none; background: transparent; padding: 10px 8px;
+    border-radius: 11px; font-family: inherit; font-weight: 700; font-size: 13.5px;
+    color: #8A8272; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 6px; transition: background .15s, color .15s;
+  }
+  .tab.active { background: #fff; color: #3A3226; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .icon-badge {
+    width: 44px; height: 44px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.08); transition: background .15s;
+  }
+  h1 {
+    font-family: 'Caveat', cursive;
+    font-size: 38px; line-height: 1; margin: 0; font-weight: 700; color: #3A3226;
+  }
+  .subtitle { font-size: 13px; color: #8A8272; margin: 8px 4px 20px; }
+
+  .card {
+    background: #fff; border-radius: 18px; border: 1px solid #E9E2D3;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 12px; margin-bottom: 16px;
+  }
+  .add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  #text-input {
+    flex: 1; min-width: 0; padding: 12px 14px; border-radius: 12px;
+    background: #F6F2EA; border: none; outline: none; color: #3A3226;
+    font-size: 15px; font-family: inherit;
+  }
+  #text-input::placeholder { color: #B0A98F; }
+  #text-input:focus { outline: 2px solid #8A9B6E; outline-offset: 1px; }
+
+  #add-btn {
+    width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px;
+    background: #3A3226; color: #fff; border: none; display: flex;
+    align-items: center; justify-content: center; cursor: pointer;
+  }
+  #add-btn:active { transform: scale(0.95); }
+
+  .options-row { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .opt-toggle {
+    display: flex; align-items: center; gap: 6px; padding: 6px 11px;
+    border-radius: 999px; border: 1px solid #E9E2D3; background: transparent;
+    color: #8A8272; font-size: 12px; font-weight: 700; font-family: inherit;
+    cursor: pointer; position: relative;
+  }
+  .opt-toggle.on { color: #fff; border-color: #D9A441; background: #D9A441; }
+  .opt-toggle .clear-x { display: flex; margin-left: 2px; }
+
+  .chips-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .chips-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #B0A98F; }
+  .manage-btn {
+    border: none; background: none; color: #8A8272; font-size: 12px;
+    font-family: inherit; font-weight: 700; cursor: pointer; padding: 2px 4px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .manage-btn.on { color: #C1440E; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip {
+    padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    border: 1px solid #E9E2D3; background: transparent; color: #8A8272;
+    cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px;
+  }
+  .chip.active { color: #fff; border-color: transparent; }
+  .chip .remove-x { display: flex; margin-left: 2px; }
+
+  .new-cat-row { display: flex; gap: 6px; align-items: center; }
+  .new-cat-input {
+    padding: 6px 10px; border-radius: 999px; border: 1.5px dashed #C9A66B;
+    background: #FBF8F1; font-size: 12px; font-family: inherit; outline: none;
+    color: #3A3226; width: 130px;
+  }
+  .new-cat-confirm {
+    width: 26px; height: 26px; border-radius: 999px; border: none;
+    background: #8A9B6E; color: #fff; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .add-cat-chip {
+    padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    border: 1.5px dashed #C9A66B; background: transparent; color: #B4854A;
+    cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px;
+  }
+
+  .cat-manage-list { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .cat-row {
+    display: flex; align-items: center; gap: 8px; background: #F6F2EA;
+    border-radius: 12px; padding: 8px 10px; transition: opacity .1s;
+  }
+  .cat-row.dragging { opacity: 0.35; }
+  .drag-handle {
+    cursor: grab; touch-action: none; color: #B0A98F; display: flex;
+    padding: 4px; flex-shrink: 0;
+  }
+  .cat-row .dot { width: 10px; height: 10px; }
+  .cat-row-label { flex: 1; font-size: 13px; font-weight: 700; color: #3A3226; }
+  .cat-row-del {
+    background: none; border: none; color: #C1440E; cursor: pointer;
+    display: flex; padding: 4px; opacity: 0.7; flex-shrink: 0;
+  }
+  .drag-ghost {
+    position: fixed; z-index: 999; pointer-events: none; display: flex;
+    align-items: center; gap: 8px; background: #fff; border: 1px solid #E9E2D3;
+    border-radius: 12px; padding: 8px 14px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    font-size: 13px; font-weight: 700; color: #3A3226;
+  }
+
+  .group { margin-bottom: 16px; }
+  .group-label {
+    display: flex; align-items: center; gap: 8px; margin: 0 4px 6px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #8A8272;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+
+  .list-card {
+    background: #fff; border-radius: 18px; border: 1px solid #E9E2D3;
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .item {
+    display: flex; align-items: center; gap: 10px; padding: 12px;
+    border-bottom: 1px solid #F0EBDF;
+  }
+  .item:last-child { border-bottom: none; }
+
+  .check-btn {
+    width: 24px; height: 24px; flex-shrink: 0; border-radius: 999px;
+    border: 2px solid #D8D0BC; background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .item-text { flex: 1; font-size: 15px; word-break: break-word; color: #3A3226; }
+  .item-text.done { color: #B0A98F; text-decoration: line-through; }
+
+  /* Zmiana kategorii pojedynczego elementu: kolorowa kropka z NATYWNYM selectem
+     nałożonym niewidocznie na wierzch — otwiera systemowy picker telefonu,
+     więc menu nigdy nie jest "obcięte" przez kartę z overflow:hidden. */
+  .cat-picker { position: relative; width: 22px; height: 22px; flex-shrink: 0; }
+  .cat-dot-visual {
+    width: 22px; height: 22px; border-radius: 999px; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cat-dot-visual::after {
+    content: ""; width: 8px; height: 8px; border-radius: 999px; background: rgba(255,255,255,.85);
+  }
+  .cat-select {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; border: none; cursor: pointer; font-size: 16px;
+  }
+
+  .del-btn {
+    background: none; border: none; color: #C1440E; cursor: pointer;
+    padding: 4px; display: flex; opacity: 0.6; flex-shrink: 0;
+  }
+
+  .item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .star-btn {
+    background: none; border: none; cursor: pointer; padding: 2px;
+    display: flex; flex-shrink: 0; color: #D8D0BC;
+  }
+  .star-btn.on { color: #D9A441; }
+
+  .empty { text-align: center; padding: 60px 0; color: #B0A98F; }
+  .empty svg { opacity: 0.5; margin-bottom: 8px; }
+  .empty p { font-size: 14px; margin: 0; }
+
+  .clear-btn {
+    display: flex; align-items: center; gap: 6px; justify-content: center;
+    margin: 20px auto 0; background: none; border: none; color: #8A8272;
+    font-size: 14px; font-family: inherit; cursor: pointer; padding: 6px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="tabs" id="tabs"></div>
+
+    <div class="header">
+      <div class="icon-badge" id="icon-badge"></div>
+      <h1 id="title">Moje listy</h1>
+    </div>
+    <p class="subtitle" id="subtitle"></p>
+
+    <div class="card">
+      <div class="add-row">
+        <input id="text-input" placeholder="" />
+        <button id="add-btn" aria-label="Dodaj">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div class="options-row" id="options-row"></div>
+      <div class="chips-header">
+        <span class="chips-title">Kategorie</span>
+        <button class="manage-btn" id="manage-btn"></button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div id="content"></div>
+  </div>
+
+<script>
+  const TYPES = {
+    zakupy: {
+      label: "Zakupy",
+      title: "Lista zakupów",
+      badgeColor: "#8A9B6E",
+      placeholder: "np. mleko, ręcznik papierowy...",
+      emptyMain: "Twoja lista jest pusta — dodaj pierwszą rzecz.",
+      emptyDone: "Wszystko odhaczone. Można iść do kasy.",
+      remainingLabel: "Zostało do kupienia",
+      emptyList: "Brak produktów na liście",
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F6F2EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h2l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L22 6H6"/><path d="M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/><path d="M18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>`,
+      defaultCats: [
+        { id: "spozywcze", label: "Spożywcze", color: "#8A9B6E" },
+        { id: "chemia", label: "Chemia i higiena", color: "#C9A66B" },
+        { id: "dom", label: "Dom", color: "#B0755F" },
+        { id: "inne", label: "Inne", color: "#7C8A99" },
+      ]
+    },
+    cele: {
+      label: "Cele życiowe",
+      title: "Lista celów",
+      badgeColor: "#6B8CA6",
+      placeholder: "np. przeczytać 12 książek w tym roku...",
+      emptyMain: "Brak celów — dodaj pierwszy.",
+      emptyDone: "Wszystkie cele osiągnięte. Czas na nowe!",
+      remainingLabel: "W trakcie realizacji",
+      emptyList: "Brak celów na liście",
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F6F2EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>`,
+      defaultCats: [
+        { id: "kariera", label: "Kariera", color: "#6B8CA6" },
+        { id: "zdrowie", label: "Zdrowie", color: "#8A9B6E" },
+        { id: "finanse", label: "Finanse", color: "#C9A66B" },
+        { id: "rozwoj", label: "Rozwój osobisty", color: "#A67C8A" },
+        { id: "inne", label: "Inne", color: "#7C8A99" },
+      ]
+    }
+  };
+
+  const PALETTE = ["#8A9B6E","#C9A66B","#B0755F","#7C8A99","#A67C8A","#6B8CA6","#A6936B","#7C9A7C","#B88A6B","#8A7C9A"];
+
+  const KEY_ITEMS = "moje-listy:items";
+  const KEY_CATS = "moje-listy:categories";
+  const KEY_TYPE = "moje-listy:active-type";
+
+  function loadJSON(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    } catch (e) { return fallback; }
+  }
+
+  let allItems = loadJSON(KEY_ITEMS, { zakupy: [], cele: [] });
+  let allCats = loadJSON(KEY_CATS, null);
+  if (!allCats) {
+    allCats = {
+      zakupy: TYPES.zakupy.defaultCats.map(c => ({...c})),
+      cele: TYPES.cele.defaultCats.map(c => ({...c})),
+    };
+  }
+  let activeType = loadJSON(KEY_TYPE, "zakupy");
+  if (!TYPES[activeType]) activeType = "zakupy";
+
+  let activeCategory = allCats[activeType][0]?.id || null;
+  let manageMode = false;
+  let addingCategory = false;
+  let newPriority = false;
+
+  function saveItems() { localStorage.setItem(KEY_ITEMS, JSON.stringify(allItems)); }
+  function saveCats() { localStorage.setItem(KEY_CATS, JSON.stringify(allCats)); }
+  function saveType() { localStorage.setItem(KEY_TYPE, JSON.stringify(activeType)); }
+
+  const tabsEl = document.getElementById("tabs");
+  const iconBadgeEl = document.getElementById("icon-badge");
+  const titleEl = document.getElementById("title");
+  const subtitleEl = document.getElementById("subtitle");
+  const inputEl = document.getElementById("text-input");
+  const chipsEl = document.getElementById("chips");
+  const optionsRowEl = document.getElementById("options-row");
+  const manageBtnEl = document.getElementById("manage-btn");
+  const contentEl = document.getElementById("content");
+
+  function checkSvg() {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  }
+  function xSvg(color = "#C1440E", w = 16) {
+    return `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+  }
+  function emptySvg() {
+    return `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#B0A98F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg>`;
+  }
+  function pencilSvg() {
+    return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+  }
+  function trashSvg() {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>`;
+  }
+  function starSvg(filled, size = 13) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15.09 8.63 22 9.24 16.5 14.14 18.18 21 12 17.27 5.82 21 7.5 14.14 2 9.24 8.91 8.63 12 2"/></svg>`;
+  }
+  function calendarSvg(size = 13) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`;
+  }
+  function handleSvg() {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="5" r="1.6"/><circle cx="16" cy="5" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/></svg>`;
+  }
+
+  function nextColor() {
+    const used = allCats[activeType].map(c => c.color);
+    return PALETTE.find(c => !used.includes(c)) || PALETTE[allCats[activeType].length % PALETTE.length];
+  }
+
+  function renderTabs() {
+    tabsEl.innerHTML = "";
+    Object.keys(TYPES).forEach(typeId => {
+      const t = TYPES[typeId];
+      const btn = document.createElement("button");
+      btn.className = "tab" + (typeId === activeType ? " active" : "");
+      btn.textContent = t.label;
+      btn.onclick = () => {
+        activeType = typeId;
+        activeCategory = allCats[activeType][0]?.id || null;
+        manageMode = false;
+        addingCategory = false;
+        newPriority = false;
+        saveType();
+        renderAll();
+      };
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function renderHeader() {
+    const t = TYPES[activeType];
+    iconBadgeEl.style.background = t.badgeColor;
+    iconBadgeEl.innerHTML = t.icon;
+    titleEl.textContent = t.title;
+    inputEl.placeholder = t.placeholder;
+
+    const items = allItems[activeType];
+    const remaining = items.filter(it => !it.done).length;
+    subtitleEl.textContent = items.length === 0
+      ? t.emptyMain
+      : remaining === 0
+      ? t.emptyDone
+      : `${t.remainingLabel}: ${remaining}`;
+  }
+
+  function renderOptions() {
+    optionsRowEl.innerHTML = "";
+
+    const starBtn = document.createElement("button");
+    starBtn.className = "opt-toggle" + (newPriority ? " on" : "");
+    starBtn.innerHTML = `${starSvg(newPriority)} Priorytet`;
+    starBtn.onclick = () => { newPriority = !newPriority; renderOptions(); };
+    optionsRowEl.appendChild(starBtn);
+  }
+
+  function renderManageBtn() {
+    manageBtnEl.className = "manage-btn" + (manageMode ? " on" : "");
+    manageBtnEl.innerHTML = manageMode
+      ? `${xSvg("#C1440E", 12)} Gotowe`
+      : `${pencilSvg()} Zarządzaj`;
+    manageBtnEl.onclick = () => {
+      manageMode = !manageMode;
+      addingCategory = false;
+      renderChips();
+    };
+  }
+
+  function renderChips() {
+    chipsEl.innerHTML = "";
+    const cats = allCats[activeType];
+
+    if (manageMode) {
+      renderManageList();
+    } else {
+      cats.forEach(cat => {
+        const chip = document.createElement("button");
+        chip.className = "chip" + (cat.id === activeCategory ? " active" : "");
+        if (cat.id === activeCategory) {
+          chip.style.background = cat.color;
+          chip.style.borderColor = cat.color;
+        }
+        chip.innerHTML = `<span>${cat.label}</span>`;
+        chip.onclick = () => { activeCategory = cat.id; renderChips(); };
+        chipsEl.appendChild(chip);
+      });
+    }
+
+    if (manageMode) {
+      if (addingCategory) {
+        const row = document.createElement("div");
+        row.className = "new-cat-row";
+        row.style.marginTop = "8px";
+        const input = document.createElement("input");
+        input.className = "new-cat-input";
+        input.placeholder = "Nazwa kategorii";
+        const confirm = document.createElement("button");
+        confirm.className = "new-cat-confirm";
+        confirm.innerHTML = checkSvg();
+        const commit = () => {
+          const val = input.value.trim();
+          if (val) {
+            const id = "cat-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+            allCats[activeType].push({ id, label: val, color: nextColor() });
+            saveCats();
+          }
+          addingCategory = false;
+          renderChips();
+        };
+        confirm.onclick = commit;
+        input.addEventListener("keydown", e => { if (e.key === "Enter") commit(); });
+        row.appendChild(input);
+        row.appendChild(confirm);
+        chipsEl.appendChild(row);
+        setTimeout(() => input.focus(), 0);
+      } else {
+        const addChip = document.createElement("button");
+        addChip.className = "add-cat-chip";
+        addChip.style.marginTop = "8px";
+        addChip.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Nowa kategoria`;
+        addChip.onclick = () => { addingCategory = true; renderChips(); };
+        chipsEl.appendChild(addChip);
+      }
+    }
+
+    if (!cats.find(c => c.id === activeCategory)) {
+      activeCategory = cats[0]?.id || null;
+    }
+  }
+
+  function renderManageList() {
+    const list = document.createElement("div");
+    list.className = "cat-manage-list";
+    const cats = allCats[activeType];
+
+    cats.forEach(cat => {
+      const row = document.createElement("div");
+      row.className = "cat-row";
+      row.dataset.catId = cat.id;
+
+      const handle = document.createElement("div");
+      handle.className = "drag-handle";
+      handle.innerHTML = handleSvg();
+      handle.onpointerdown = (e) => startDrag(e, cat.id);
+      row.appendChild(handle);
+
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = cat.color;
+      row.appendChild(dot);
+
+      const label = document.createElement("span");
+      label.className = "cat-row-label";
+      label.textContent = cat.label;
+      row.appendChild(label);
+
+      const del = document.createElement("button");
+      del.className = "cat-row-del";
+      del.innerHTML = xSvg("#C1440E", 15);
+      del.onclick = () => deleteCategory(cat.id);
+      row.appendChild(del);
+
+      list.appendChild(row);
+    });
+
+    chipsEl.appendChild(list);
+  }
+
+  let dragState = null;
+
+  function startDrag(e, catId) {
+    e.preventDefault();
+    const cats = allCats[activeType];
+    const row = chipsEl.querySelector(`.cat-row[data-cat-id="${catId}"]`);
+    const cat = cats.find(c => c.id === catId);
+    if (!row || !cat) return;
+
+    row.classList.add("dragging");
+
+    const ghost = document.createElement("div");
+    ghost.className = "drag-ghost";
+    ghost.innerHTML = `<span class="dot" style="background:${cat.color}"></span>${cat.label}`;
+    document.body.appendChild(ghost);
+    positionGhost(ghost, e.clientX, e.clientY);
+
+    dragState = { catId, ghost };
+
+    const onMove = (ev) => {
+      ev.preventDefault();
+      positionGhost(ghost, ev.clientX, ev.clientY);
+      const rowEl = chipsEl.querySelector(`.cat-row[data-cat-id="${dragState.catId}"]`);
+      if (rowEl) rowEl.style.pointerEvents = "none";
+      const overRow = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(".cat-row");
+      if (rowEl) rowEl.style.pointerEvents = "";
+      if (overRow && overRow.dataset.catId !== dragState.catId) {
+        const list = allCats[activeType];
+        const fromIdx = list.findIndex(c => c.id === dragState.catId);
+        const toIdx = list.findIndex(c => c.id === overRow.dataset.catId);
+        if (fromIdx !== -1 && toIdx !== -1) {
+          const [moved] = list.splice(fromIdx, 1);
+          list.splice(toIdx, 0, moved);
+          renderManageListPreservingDrag();
+        }
+      }
+    };
+
+    const onUp = () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointercancel", onUp);
+      ghost.remove();
+      const rowEl = chipsEl.querySelector(`.cat-row[data-cat-id="${dragState?.catId}"]`);
+      if (rowEl) rowEl.classList.remove("dragging");
+      dragState = null;
+      saveCats();
+    };
+
+    document.addEventListener("pointermove", onMove, { passive: false });
+    document.addEventListener("pointerup", onUp);
+    document.addEventListener("pointercancel", onUp);
+  }
+
+  function positionGhost(ghost, x, y) {
+    ghost.style.left = (x - 20) + "px";
+    ghost.style.top = (y - 18) + "px";
+  }
+
+  function renderManageListPreservingDrag() {
+    const listEl = chipsEl.querySelector(".cat-manage-list");
+    if (!listEl) return;
+    listEl.innerHTML = "";
+    allCats[activeType].forEach(cat => {
+      const row = document.createElement("div");
+      row.className = "cat-row" + (dragState && dragState.catId === cat.id ? " dragging" : "");
+      row.dataset.catId = cat.id;
+
+      const handle = document.createElement("div");
+      handle.className = "drag-handle";
+      handle.innerHTML = handleSvg();
+      handle.onpointerdown = (e) => startDrag(e, cat.id);
+      row.appendChild(handle);
+
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = cat.color;
+      row.appendChild(dot);
+
+      const label = document.createElement("span");
+      label.className = "cat-row-label";
+      label.textContent = cat.label;
+      row.appendChild(label);
+
+      const del = document.createElement("button");
+      del.className = "cat-row-del";
+      del.innerHTML = xSvg("#C1440E", 15);
+      del.onclick = () => deleteCategory(cat.id);
+      row.appendChild(del);
+
+      listEl.appendChild(row);
+    });
+  }
+
+  function deleteCategory(catId) {
+    const cats = allCats[activeType];
+    if (cats.length <= 1) return; // musi zostać co najmniej jedna kategoria
+    const remaining = cats.filter(c => c.id !== catId);
+    const fallbackId = remaining[0].id;
+    // przenieś elementy usuwanej kategorii do pierwszej pozostałej
+    allItems[activeType] = allItems[activeType].map(it =>
+      it.category === catId ? { ...it, category: fallbackId } : it
+    );
+    allCats[activeType] = remaining;
+    saveCats(); saveItems();
+    renderChips(); renderList(); renderHeader();
+  }
+
+  function renderList() {
+    const t = TYPES[activeType];
+    const items = allItems[activeType];
+    const cats = allCats[activeType];
+    contentEl.innerHTML = "";
+
+    const sortedItems = [...items].sort((a, b) => (!!b.priority) - (!!a.priority));
+
+    const groups = cats.map(cat => ({
+      ...cat,
+      items: sortedItems.filter(it => it.category === cat.id)
+    })).filter(g => g.items.length > 0);
+
+    if (groups.length === 0) {
+      contentEl.innerHTML = `<div class="empty">${emptySvg()}<p>${t.emptyList}</p></div>`;
+      return;
+    }
+
+    groups.forEach(group => {
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "group";
+
+      const label = document.createElement("div");
+      label.className = "group-label";
+      label.innerHTML = `<span class="dot" style="background:${group.color}"></span>${group.label}`;
+      groupDiv.appendChild(label);
+
+      const listCard = document.createElement("div");
+      listCard.className = "list-card";
+
+      group.items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "item";
+
+        const checkBtn = document.createElement("button");
+        checkBtn.className = "check-btn";
+        checkBtn.style.borderColor = item.done ? group.color : "#D8D0BC";
+        checkBtn.style.background = item.done ? group.color : "transparent";
+        checkBtn.innerHTML = item.done ? checkSvg() : "";
+        checkBtn.onclick = () => {
+          item.done = !item.done;
+          saveItems(); renderList(); renderHeader();
+        };
+
+        const body = document.createElement("div");
+        body.className = "item-body";
+
+        const text = document.createElement("span");
+        text.className = "item-text" + (item.done ? " done" : "");
+        text.textContent = item.text;
+        body.appendChild(text);
+
+        const starBtn = document.createElement("button");
+        starBtn.className = "star-btn" + (item.priority ? " on" : "");
+        starBtn.setAttribute("aria-label", "Priorytet");
+        starBtn.innerHTML = starSvg(!!item.priority, 16);
+        starBtn.onclick = () => {
+          item.priority = !item.priority;
+          saveItems(); renderList();
+        };
+
+        // Zmiana kategorii — natywny <select> nałożony na kolorową kropkę.
+        // Otwiera systemowy picker telefonu, więc działa niezawodnie na mobile.
+        const picker = document.createElement("div");
+        picker.className = "cat-picker";
+        const dotVisual = document.createElement("div");
+        dotVisual.className = "cat-dot-visual";
+        dotVisual.style.background = group.color;
+        const select = document.createElement("select");
+        select.className = "cat-select";
+        select.setAttribute("aria-label", "Zmień kategorię");
+        cats.forEach(cat => {
+          const opt = document.createElement("option");
+          opt.value = cat.id;
+          opt.textContent = cat.label;
+          if (cat.id === item.category) opt.selected = true;
+          select.appendChild(opt);
+        });
+        select.onchange = () => {
+          item.category = select.value;
+          saveItems(); renderList(); renderHeader();
+        };
+        picker.appendChild(dotVisual);
+        picker.appendChild(select);
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "del-btn";
+        delBtn.innerHTML = xSvg();
+        delBtn.onclick = () => {
+          allItems[activeType] = allItems[activeType].filter(it => it.id !== item.id);
+          saveItems(); renderList(); renderHeader();
+        };
+
+        row.appendChild(checkBtn);
+        row.appendChild(body);
+        row.appendChild(starBtn);
+        row.appendChild(picker);
+        row.appendChild(delBtn);
+        listCard.appendChild(row);
+      });
+
+      groupDiv.appendChild(listCard);
+      contentEl.appendChild(groupDiv);
+    });
+
+    if (items.some(it => it.done)) {
+      const clearBtn = document.createElement("button");
+      clearBtn.className = "clear-btn";
+      clearBtn.innerHTML = `${trashSvg()} Usuń odhaczone (${items.filter(it => it.done).length})`;
+      clearBtn.onclick = () => {
+        allItems[activeType] = allItems[activeType].filter(it => !it.done);
+        saveItems(); renderList(); renderHeader();
+      };
+      contentEl.appendChild(clearBtn);
+    }
+  }
+
+  function addItem() {
+    const val = inputEl.value.trim();
+    if (!val || !activeCategory) return;
+    allItems[activeType].push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+      text: val,
+      category: activeCategory,
+      done: false,
+      priority: newPriority
+    });
+    inputEl.value = "";
+    newPriority = false;
+    saveItems();
+    renderOptions(); renderList(); renderHeader();
+    inputEl.focus();
+  }
+
+  document.getElementById("add-btn").onclick = addItem;
+  inputEl.addEventListener("keydown", e => { if (e.key === "Enter") addItem(); });
+
+  function renderAll() {
+    renderTabs();
+    renderHeader();
+    renderOptions();
+    renderManageBtn();
+    renderChips();
+    renderList();
+  }
+
+  renderAll();
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
