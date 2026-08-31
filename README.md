@@ -2,7 +2,7 @@
 
 Progresywna aplikacja webowa (PWA) do zarządzania listą zakupów i celami życiowymi w jednym miejscu. Dane są w pełni edytowalne, kategoryzowane i zapisywane lokalnie na urządzeniu — bez konieczności logowania czy połączenia z internetem.
 
-🔗 Działająca wersja: twojanazwa.github.io/lista-zakupow-cele (podmień na swój link)
+🔗 Działająca wersja: bazubato.github.io/lista-zakupow-cele
 
 Funkcje
 Dwa tryby list — przełączanie między listą zakupów a celami życiowymi, każdy z osobnym zestawem danych.
@@ -32,6 +32,7 @@ Zarządzanie stanem aplikacji i renderowanie UI bez frameworka (czysty DOM API).
 Obsługę zdarzeń dotykowych (pointerdown / pointermove) do implementacji przeciągania elementów (drag & drop) — działającego zarówno na telefonie, jak i na komputerze.
 Podstawy Progressive Web App: manifest, service worker, strategię cache-first.
 Projektowanie z myślą o urządzeniach mobilnych (mobile-first) i dostępności natywnych komponentów systemowych (np. natywny date/select picker zamiast własnych, które gorzej działają na dotyku).
+
 Możliwe rozszerzenia
 Synchronizacja danych między urządzeniami (backend + baza danych).
 Terminy i przypomnienia dla celów życiowych.
