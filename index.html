@@ -11,23 +11,49 @@
 <meta name="apple-mobile-web-app-title" content="Moje listy" />
 <meta name="theme-color" content="#F6F2EA" />
 
-<link rel="manifest" href="manifest.json" />
-<link rel="apple-touch-icon" href="icon-192.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
+  :root {
+    --bg: #F6F2EA;
+    --card-bg: #ffffff;
+    --border: #E9E2D3;
+    --text: #3A3226;
+    --text-muted: #8A8272;
+    --text-faint: #B0A98F;
+    --input-bg: #F6F2EA;
+    --tabs-bg: #EDE6D6;
+    --row-bg: #F6F2EA;
+    --item-border: #F0EBDF;
+    --checkbox-border: #D8D0BC;
+    --shadow: rgba(0,0,0,0.04);
+    --shadow-strong: rgba(0,0,0,0.18);
+  }
+  body.dark {
+    --bg: #211D17;
+    --card-bg: #2B261E;
+    --border: #3A3327;
+    --text: #EFE8D9;
+    --text-muted: #A69C87;
+    --text-faint: #7A705E;
+    --input-bg: #211D17;
+    --tabs-bg: #1A1712;
+    --row-bg: #211D17;
+    --item-border: #35301F;
+    --checkbox-border: #4A4230;
+    --shadow: rgba(0,0,0,0.2);
+    --shadow-strong: rgba(0,0,0,0.5);
+  }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     margin: 0; padding: 0;
-    background: #F6F2EA;
+    background: var(--bg);
     font-family: 'Nunito', system-ui, sans-serif;
-    color: #3A3226;
+    color: var(--text);
     min-height: 100vh;
     min-height: 100dvh;
+    transition: background .2s, color .2s;
   }
   body {
     padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
@@ -35,47 +61,80 @@
   }
   .wrap { max-width: 460px; margin: 0 auto; padding-bottom: 40px; }
 
+  .theme-toggle {
+    width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--card-bg); color: var(--text-muted); display: flex;
+    align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .header-actions { display: flex; gap: 6px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px);
+    transform: translateX(-50%) translateY(10px); background: var(--text); color: var(--bg);
+    padding: 10px 18px; border-radius: 999px; font-size: 13px; font-weight: 700;
+    box-shadow: 0 6px 18px var(--shadow-strong); opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; z-index: 1000; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
   /* Zakładki typu listy */
   .tabs {
-    display: flex; gap: 6px; background: #EDE6D6; padding: 4px;
+    display: flex; gap: 6px; background: var(--tabs-bg); padding: 4px;
     border-radius: 14px; margin-bottom: 18px;
   }
   .tab {
     flex: 1; border: none; background: transparent; padding: 10px 8px;
     border-radius: 11px; font-family: inherit; font-weight: 700; font-size: 13.5px;
-    color: #8A8272; cursor: pointer; display: flex; align-items: center;
+    color: var(--text-muted); cursor: pointer; display: flex; align-items: center;
     justify-content: center; gap: 6px; transition: background .15s, color .15s;
   }
-  .tab.active { background: #fff; color: #3A3226; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .tab.active { background: var(--card-bg); color: var(--text); box-shadow: 0 1px 2px var(--shadow); }
+  .tab-edit-icon { display: inline-flex; margin-left: 5px; opacity: 0.55; }
+  .tab-edit-input {
+    flex: 1; min-width: 0; border: none; border-radius: 11px; background: var(--card-bg);
+    color: var(--text); font-family: inherit; font-weight: 700; font-size: 13.5px;
+    text-align: center; padding: 10px 8px; outline: 2px solid #8A9B6E;
+  }
 
   .header { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
   .icon-badge {
-    width: 44px; height: 44px; border-radius: 16px;
+    width: 44px; height: 44px; border-radius: 16px; position: relative;
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.08); transition: background .15s;
+    flex-shrink: 0; box-shadow: 0 1px 2px var(--shadow); transition: background .15s;
   }
+  .badge-color-input {
+    position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 16px;
+    opacity: 0; border: none; padding: 0; cursor: pointer;
+  }
+  .badge-icon-edit {
+    position: absolute; bottom: -5px; right: -5px; width: 18px; height: 18px;
+    border-radius: 999px; border: 2px solid var(--bg); background: var(--card-bg);
+    color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0;
+  }
+  .badge-icon-edit svg { width: 9px; height: 9px; }
   h1 {
     font-family: 'Caveat', cursive;
-    font-size: 38px; line-height: 1; margin: 0; font-weight: 700; color: #3A3226;
+    font-size: 38px; line-height: 1; margin: 0; font-weight: 700; color: var(--text);
   }
-  .subtitle { font-size: 13px; color: #8A8272; margin: 8px 4px 20px; }
+  .subtitle { font-size: 13px; color: var(--text-muted); margin: 8px 4px 20px; }
 
   .card {
-    background: #fff; border-radius: 18px; border: 1px solid #E9E2D3;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 12px; margin-bottom: 16px;
+    background: var(--card-bg); border-radius: 18px; border: 1px solid var(--border);
+    box-shadow: 0 1px 3px var(--shadow); padding: 12px; margin-bottom: 16px;
   }
   .add-row { display: flex; gap: 8px; margin-bottom: 12px; }
   #text-input {
     flex: 1; min-width: 0; padding: 12px 14px; border-radius: 12px;
-    background: #F6F2EA; border: none; outline: none; color: #3A3226;
+    background: var(--input-bg); border: none; outline: none; color: var(--text);
     font-size: 15px; font-family: inherit;
   }
-  #text-input::placeholder { color: #B0A98F; }
+  #text-input::placeholder { color: var(--text-faint); }
   #text-input:focus { outline: 2px solid #8A9B6E; outline-offset: 1px; }
 
   #add-btn {
     width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px;
-    background: #3A3226; color: #fff; border: none; display: flex;
+    background: var(--text); color: var(--bg); border: none; display: flex;
     align-items: center; justify-content: center; cursor: pointer;
   }
   #add-btn:active { transform: scale(0.95); }
@@ -83,17 +142,30 @@
   .options-row { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .opt-toggle {
     display: flex; align-items: center; gap: 6px; padding: 6px 11px;
-    border-radius: 999px; border: 1px solid #E9E2D3; background: transparent;
-    color: #8A8272; font-size: 12px; font-weight: 700; font-family: inherit;
+    border-radius: 999px; border: 1px solid var(--border); background: transparent;
+    color: var(--text-muted); font-size: 12px; font-weight: 700; font-family: inherit;
     cursor: pointer; position: relative;
   }
   .opt-toggle.on { color: #fff; border-color: #D9A441; background: #D9A441; }
-  .opt-toggle .clear-x { display: flex; margin-left: 2px; }
+  .opt-toggle.date-on { color: #fff; border-color: #6B8CA6; background: #6B8CA6; }
+  .opt-toggle .clear-x { display: flex; margin-left: 2px; background: none; border: none; color: inherit; cursor: pointer; padding: 0; }
+  .date-overlay-input {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; border: none; cursor: pointer; padding: 0;
+  }
+  .due-badge {
+    display: inline-flex; align-items: center; gap: 4px; align-self: flex-start;
+    font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    background: var(--row-bg); color: var(--text-muted); position: relative;
+  }
+  .due-badge.soon { background: #FBEFD9; color: #A87A1F; }
+  .due-badge.overdue { background: #F8E1DA; color: #C1440E; }
+  .due-badge .clear-x { display: flex; margin-left: 2px; background: none; border: none; color: inherit; cursor: pointer; padding: 0; }
 
   .chips-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-  .chips-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #B0A98F; }
+  .chips-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text-faint); }
   .manage-btn {
-    border: none; background: none; color: #8A8272; font-size: 12px;
+    border: none; background: none; color: var(--text-muted); font-size: 12px;
     font-family: inherit; font-weight: 700; cursor: pointer; padding: 2px 4px;
     display: flex; align-items: center; gap: 4px;
   }
@@ -102,7 +174,7 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .chip {
     padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 700;
-    border: 1px solid #E9E2D3; background: transparent; color: #8A8272;
+    border: 1px solid var(--border); background: transparent; color: var(--text-muted);
     cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px;
   }
   .chip.active { color: #fff; border-color: transparent; }
@@ -111,8 +183,8 @@
   .new-cat-row { display: flex; gap: 6px; align-items: center; }
   .new-cat-input {
     padding: 6px 10px; border-radius: 999px; border: 1.5px dashed #C9A66B;
-    background: #FBF8F1; font-size: 12px; font-family: inherit; outline: none;
-    color: #3A3226; width: 130px;
+    background: var(--card-bg); font-size: 12px; font-family: inherit; outline: none;
+    color: var(--text); width: 130px;
   }
   .new-cat-confirm {
     width: 26px; height: 26px; border-radius: 999px; border: none;
@@ -127,52 +199,131 @@
 
   .cat-manage-list { display: flex; flex-direction: column; gap: 6px; width: 100%; }
   .cat-row {
-    display: flex; align-items: center; gap: 8px; background: #F6F2EA;
+    display: flex; align-items: center; gap: 8px; background: var(--row-bg);
     border-radius: 12px; padding: 8px 10px; transition: opacity .1s;
   }
   .cat-row.dragging { opacity: 0.35; }
   .drag-handle {
-    cursor: grab; touch-action: none; color: #B0A98F; display: flex;
+    cursor: grab; touch-action: none; color: var(--text-faint); display: flex;
     padding: 4px; flex-shrink: 0;
   }
   .cat-row .dot { width: 10px; height: 10px; }
-  .cat-row-label { flex: 1; font-size: 13px; font-weight: 700; color: #3A3226; }
+  .cat-color-swatch {
+    position: relative; width: 20px; height: 20px; border-radius: 999px;
+    flex-shrink: 0; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.06);
+  }
+  .cat-color-swatch input[type="color"] {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; border: none; padding: 0; cursor: pointer;
+  }
+  .cat-icon-btn {
+    width: 20px; height: 20px; border-radius: 999px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px dashed var(--border); background: var(--row-bg);
+    color: var(--text-faint); cursor: pointer; padding: 0;
+  }
+  .cat-icon-btn.set { border-style: solid; border-color: transparent; color: #fff; }
+  .icon-popover {
+    background: var(--row-bg); border-radius: 12px; padding: 8px;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    margin: -2px 0 4px;
+  }
+  .icon-popover button {
+    width: 32px; height: 32px; border-radius: 9px; border: none;
+    background: var(--card-bg); color: var(--text-muted); display: flex;
+    align-items: center; justify-content: center; cursor: pointer;
+  }
+  .icon-popover button.none-opt { color: #C1440E; font-size: 10px; font-weight: 800; }
+  .cat-row-label { flex: 1; font-size: 13px; font-weight: 700; color: var(--text); cursor: text; }
+  .cat-row-edit-input {
+    flex: 1; min-width: 0; font-size: 13px; font-weight: 700; font-family: inherit;
+    color: var(--text); border: none; border-bottom: 1.5px solid #8A9B6E;
+    background: transparent; outline: none; padding: 0 0 2px;
+  }
+  .cat-row-edit-btn {
+    background: none; border: none; cursor: pointer; padding: 2px;
+    display: flex; flex-shrink: 0; color: var(--text-faint);
+  }
   .cat-row-del {
     background: none; border: none; color: #C1440E; cursor: pointer;
     display: flex; padding: 4px; opacity: 0.7; flex-shrink: 0;
   }
   .drag-ghost {
     position: fixed; z-index: 999; pointer-events: none; display: flex;
-    align-items: center; gap: 8px; background: #fff; border: 1px solid #E9E2D3;
-    border-radius: 12px; padding: 8px 14px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-    font-size: 13px; font-weight: 700; color: #3A3226;
+    align-items: center; gap: 8px; background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 8px 14px; box-shadow: 0 6px 18px var(--shadow-strong);
+    font-size: 13px; font-weight: 700; color: var(--text);
+  }
+
+  .tpl-list { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .tpl-row {
+    display: flex; align-items: center; gap: 8px; background: var(--row-bg);
+    border-radius: 12px; padding: 8px 10px;
+  }
+  .tpl-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .tpl-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .tpl-count { font-size: 11px; color: var(--text-muted); }
+  .tpl-apply-btn {
+    background: #8A9B6E; color: #fff; border: none; border-radius: 999px;
+    padding: 6px 12px; font-size: 12px; font-weight: 700; font-family: inherit;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .tpl-del-btn {
+    background: none; border: none; color: #C1440E; cursor: pointer;
+    display: flex; padding: 4px; opacity: 0.7; flex-shrink: 0;
+  }
+  .tpl-empty { font-size: 12.5px; color: var(--text-faint); padding: 4px 2px 10px; }
+  .tpl-save-btn {
+    padding: 8px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 700;
+    border: 1.5px dashed #C9A66B; background: transparent; color: #B4854A;
+    cursor: pointer; font-family: inherit; display: flex; align-items: center;
+    justify-content: center; gap: 6px; width: 100%; margin-top: 8px;
+  }
+  .tpl-save-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+  .tpl-save-input {
+    flex: 1; min-width: 0; padding: 8px 12px; border-radius: 999px;
+    border: 1.5px dashed #C9A66B; background: var(--card-bg); font-size: 12.5px;
+    font-family: inherit; outline: none; color: var(--text);
   }
 
   .group { margin-bottom: 16px; }
   .group-label {
     display: flex; align-items: center; gap: 8px; margin: 0 4px 6px;
     font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-    color: #8A8272;
+    color: var(--text-muted);
   }
   .dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+  .group-dot {
+    width: 15px; height: 15px; border-radius: 999px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
 
   .list-card {
-    background: #fff; border-radius: 18px; border: 1px solid #E9E2D3;
-    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: var(--card-bg); border-radius: 18px; border: 1px solid var(--border);
+    overflow: hidden; box-shadow: 0 1px 3px var(--shadow);
   }
   .item {
     display: flex; align-items: center; gap: 10px; padding: 12px;
-    border-bottom: 1px solid #F0EBDF;
+    border-bottom: 1px solid var(--item-border);
   }
   .item:last-child { border-bottom: none; }
 
   .check-btn {
     width: 24px; height: 24px; flex-shrink: 0; border-radius: 999px;
-    border: 2px solid #D8D0BC; background: transparent; cursor: pointer;
+    border: 2px solid var(--checkbox-border); background: transparent; cursor: pointer;
     display: flex; align-items: center; justify-content: center; padding: 0;
   }
-  .item-text { flex: 1; font-size: 15px; word-break: break-word; color: #3A3226; }
-  .item-text.done { color: #B0A98F; text-decoration: line-through; }
+  .item-text { flex: 1; font-size: 15px; word-break: break-word; color: var(--text); cursor: text; }
+  .item-text.done { color: var(--text-faint); text-decoration: line-through; }
+  .item-edit-input {
+    flex: 1; min-width: 0; font-size: 15px; font-family: inherit; color: var(--text);
+    border: none; border-bottom: 1.5px solid #8A9B6E; background: transparent;
+    outline: none; padding: 0 0 2px;
+  }
+  .edit-btn {
+    background: none; border: none; cursor: pointer; padding: 2px;
+    display: flex; flex-shrink: 0; color: var(--text-faint);
+  }
 
   /* Zmiana kategorii pojedynczego elementu: kolorowa kropka z NATYWNYM selectem
      nałożonym niewidocznie na wierzch — otwiera systemowy picker telefonu,
@@ -180,11 +331,12 @@
   .cat-picker { position: relative; width: 22px; height: 22px; flex-shrink: 0; }
   .cat-dot-visual {
     width: 22px; height: 22px; border-radius: 999px; pointer-events: none;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center; color: #fff;
   }
   .cat-dot-visual::after {
     content: ""; width: 8px; height: 8px; border-radius: 999px; background: rgba(255,255,255,.85);
   }
+  .cat-dot-visual.has-icon::after { content: none; }
   .cat-select {
     position: absolute; inset: 0; width: 100%; height: 100%;
     opacity: 0; border: none; cursor: pointer; font-size: 16px;
@@ -198,19 +350,56 @@
   .item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .star-btn {
     background: none; border: none; cursor: pointer; padding: 2px;
-    display: flex; flex-shrink: 0; color: #D8D0BC;
+    display: flex; flex-shrink: 0; color: var(--checkbox-border);
   }
   .star-btn.on { color: #D9A441; }
 
-  .empty { text-align: center; padding: 60px 0; color: #B0A98F; }
+  .empty { text-align: center; padding: 60px 0; color: var(--text-faint); }
   .empty svg { opacity: 0.5; margin-bottom: 8px; }
   .empty p { font-size: 14px; margin: 0; }
 
   .clear-btn {
     display: flex; align-items: center; gap: 6px; justify-content: center;
-    margin: 20px auto 0; background: none; border: none; color: #8A8272;
+    margin: 20px auto 0; background: none; border: none; color: var(--text-muted);
     font-size: 14px; font-family: inherit; cursor: pointer; padding: 6px;
   }
+
+  .stats-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1100;
+    display: none; align-items: flex-end; justify-content: center; padding: 0;
+  }
+  .stats-overlay.show { display: flex; }
+  .stats-card {
+    background: var(--card-bg); width: 100%; max-width: 460px;
+    border-radius: 24px 24px 0 0; padding: 20px 18px calc(env(safe-area-inset-bottom) + 24px);
+    max-height: 82vh; overflow-y: auto; box-shadow: 0 -8px 30px var(--shadow-strong);
+  }
+  .stats-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .stats-title { font-family: 'Caveat', cursive; font-size: 28px; font-weight: 700; color: var(--text); }
+  .stats-close {
+    width: 32px; height: 32px; border-radius: 999px; border: none;
+    background: var(--row-bg); color: var(--text-muted); display: flex;
+    align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .stats-hero {
+    text-align: center; padding: 16px 0 20px; border-bottom: 1px solid var(--item-border);
+    margin-bottom: 16px;
+  }
+  .stats-hero-number { font-family: 'Caveat', cursive; font-size: 52px; font-weight: 700; line-height: 1; color: #8A9B6E; }
+  .stats-hero-label { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+  .stats-section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text-faint); margin: 0 0 8px 2px; }
+  .stats-row { margin-bottom: 14px; }
+  .stats-row-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+  .stats-row-label { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 700; color: var(--text); }
+  .stats-row-nums { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+  .stats-bar-track { height: 8px; border-radius: 999px; background: var(--row-bg); overflow: hidden; }
+  .stats-bar-fill { height: 100%; border-radius: 999px; transition: width .3s; }
+  .stats-month-box {
+    background: var(--row-bg); border-radius: 14px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px; margin-top: 4px;
+  }
+  .stats-month-number { font-family: 'Caveat', cursive; font-size: 30px; font-weight: 700; color: #6B8CA6; }
+  .stats-month-label { font-size: 12.5px; color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -220,7 +409,13 @@
     <div class="header">
       <div class="icon-badge" id="icon-badge"></div>
       <h1 id="title">Moje listy</h1>
+      <div style="flex:1"></div>
+      <div class="header-actions">
+        <button class="theme-toggle" id="stats-btn" aria-label="Statystyki"></button>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Przełącz motyw"></button>
+      </div>
     </div>
+    <div id="type-icon-popover"></div>
     <p class="subtitle" id="subtitle"></p>
 
     <div class="card">
@@ -238,7 +433,20 @@
       <div class="chips" id="chips"></div>
     </div>
 
+    <div class="card">
+      <div class="chips-header">
+        <span class="chips-title">Szablony</span>
+      </div>
+      <div id="templates-panel"></div>
+    </div>
+
     <div id="content"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="stats-overlay" id="stats-overlay">
+    <div class="stats-card" id="stats-card"></div>
   </div>
 
 <script>
@@ -277,6 +485,22 @@
         { id: "rozwoj", label: "Rozwój osobisty", color: "#A67C8A" },
         { id: "inne", label: "Inne", color: "#7C8A99" },
       ]
+    },
+    jednorazowe: {
+      label: "Jednorazowe",
+      title: "Lista jednorazowa",
+      badgeColor: "#A67C8A",
+      placeholder: "np. balony, tort, świeczki...",
+      emptyMain: "Pusto — dodaj pierwszą rzecz na tę okazję.",
+      emptyDone: "Wszystko odhaczone. Gotowe na wysyłkę.",
+      remainingLabel: "Zostało do załatwienia",
+      emptyList: "Brak pozycji na liście",
+      icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F6F2EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>`,
+      defaultCats: [
+        { id: "impreza", label: "Impreza / okazja", color: "#A67C8A" },
+        { id: "prezenty", label: "Prezenty", color: "#C9A66B" },
+        { id: "inne", label: "Inne", color: "#7C8A99" },
+      ]
     }
   };
 
@@ -285,6 +509,10 @@
   const KEY_ITEMS = "moje-listy:items";
   const KEY_CATS = "moje-listy:categories";
   const KEY_TYPE = "moje-listy:active-type";
+  const KEY_THEME = "moje-listy:theme";
+  const KEY_TYPE_LABELS = "moje-listy:type-labels";
+  const KEY_TYPE_STYLES = "moje-listy:type-styles";
+  const KEY_TEMPLATES = "moje-listy:templates";
 
   function loadJSON(key, fallback) {
     try {
@@ -293,35 +521,195 @@
     } catch (e) { return fallback; }
   }
 
-  let allItems = loadJSON(KEY_ITEMS, { zakupy: [], cele: [] });
-  let allCats = loadJSON(KEY_CATS, null);
-  if (!allCats) {
-    allCats = {
-      zakupy: TYPES.zakupy.defaultCats.map(c => ({...c})),
-      cele: TYPES.cele.defaultCats.map(c => ({...c})),
-    };
+  let theme = localStorage.getItem(KEY_THEME);
+  if (!theme) theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  if (theme === "dark") document.body.classList.add("dark");
+
+  let typeLabels = loadJSON(KEY_TYPE_LABELS, {});
+  function getTypeName(typeId) {
+    return typeLabels[typeId] || TYPES[typeId].label;
   }
+  function saveTypeLabels() { localStorage.setItem(KEY_TYPE_LABELS, JSON.stringify(typeLabels)); }
+
+  let typeStyles = loadJSON(KEY_TYPE_STYLES, {});
+  function getTypeColor(typeId) {
+    return (typeStyles[typeId] && typeStyles[typeId].color) || TYPES[typeId].badgeColor;
+  }
+  function getTypeIconHTML(typeId, size) {
+    const customIcon = typeStyles[typeId] && typeStyles[typeId].icon;
+    return customIcon ? catIconSvg(customIcon, size) : TYPES[typeId].icon;
+  }
+  function saveTypeStyles() { localStorage.setItem(KEY_TYPE_STYLES, JSON.stringify(typeStyles)); }
+
+  let allItems = loadJSON(KEY_ITEMS, {});
+  let allCats = loadJSON(KEY_CATS, {});
+  let allTemplates = loadJSON(KEY_TEMPLATES, {});
+  Object.keys(TYPES).forEach(typeId => {
+    if (!Array.isArray(allItems[typeId])) allItems[typeId] = [];
+    if (!Array.isArray(allCats[typeId]) || allCats[typeId].length === 0) {
+      allCats[typeId] = TYPES[typeId].defaultCats.map(c => ({...c}));
+    }
+    if (!Array.isArray(allTemplates[typeId])) allTemplates[typeId] = [];
+  });
   let activeType = loadJSON(KEY_TYPE, "zakupy");
   if (!TYPES[activeType]) activeType = "zakupy";
 
   let activeCategory = allCats[activeType][0]?.id || null;
   let manageMode = false;
   let addingCategory = false;
+  let addingTemplate = false;
   let newPriority = false;
+  let newDueDate = null;
+
+  const MONTHS_SHORT = ["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
+  function todayISO() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function formatShortDate(iso) {
+    const [y,m,d] = iso.split("-").map(Number);
+    return `${d} ${MONTHS_SHORT[m-1]}`;
+  }
+  function dueStatus(iso) {
+    if (!iso) return "normal";
+    const today = todayISO();
+    if (iso < today) return "overdue";
+    const soon = new Date();
+    soon.setDate(soon.getDate() + 3);
+    const soonISO = soon.getFullYear() + "-" + String(soon.getMonth()+1).padStart(2,"0") + "-" + String(soon.getDate()).padStart(2,"0");
+    if (iso <= soonISO) return "soon";
+    return "normal";
+  }
 
   function saveItems() { localStorage.setItem(KEY_ITEMS, JSON.stringify(allItems)); }
   function saveCats() { localStorage.setItem(KEY_CATS, JSON.stringify(allCats)); }
   function saveType() { localStorage.setItem(KEY_TYPE, JSON.stringify(activeType)); }
+  function saveTemplates() { localStorage.setItem(KEY_TEMPLATES, JSON.stringify(allTemplates)); }
 
   const tabsEl = document.getElementById("tabs");
   const iconBadgeEl = document.getElementById("icon-badge");
+  const typeIconPopoverEl = document.getElementById("type-icon-popover");
   const titleEl = document.getElementById("title");
   const subtitleEl = document.getElementById("subtitle");
   const inputEl = document.getElementById("text-input");
   const chipsEl = document.getElementById("chips");
   const optionsRowEl = document.getElementById("options-row");
   const manageBtnEl = document.getElementById("manage-btn");
+  const templatesPanelEl = document.getElementById("templates-panel");
   const contentEl = document.getElementById("content");
+  const themeToggleEl = document.getElementById("theme-toggle");
+  const statsBtnEl = document.getElementById("stats-btn");
+  const statsOverlayEl = document.getElementById("stats-overlay");
+  const statsCardEl = document.getElementById("stats-card");
+  const toastEl = document.getElementById("toast");
+
+  let toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
+  }
+
+  function isThisMonth(iso) {
+    if (!iso) return false;
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }
+
+  function renderStats() {
+    statsCardEl.innerHTML = "";
+
+    const header = document.createElement("div");
+    header.className = "stats-header";
+    header.innerHTML = `<span class="stats-title">Statystyki</span>`;
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "stats-close";
+    closeBtn.innerHTML = xMarkSvg(15);
+    closeBtn.onclick = closeStats;
+    header.appendChild(closeBtn);
+    statsCardEl.appendChild(header);
+
+    let totalDone = 0;
+    Object.keys(TYPES).forEach(typeId => {
+      totalDone += allItems[typeId].filter(it => it.done).length;
+    });
+
+    const hero = document.createElement("div");
+    hero.className = "stats-hero";
+    hero.innerHTML = `<div class="stats-hero-number">${totalDone}</div><div class="stats-hero-label">łącznie zrealizowanych pozycji, we wszystkich listach</div>`;
+    statsCardEl.appendChild(hero);
+
+    const sectionTitle = document.createElement("div");
+    sectionTitle.className = "stats-section-title";
+    sectionTitle.textContent = "Postęp w poszczególnych listach";
+    statsCardEl.appendChild(sectionTitle);
+
+    Object.keys(TYPES).forEach(typeId => {
+      const t = TYPES[typeId];
+      const items = allItems[typeId];
+      const done = items.filter(it => it.done).length;
+      const total = items.length;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+      const row = document.createElement("div");
+      row.className = "stats-row";
+      const top = document.createElement("div");
+      top.className = "stats-row-top";
+      top.innerHTML = `
+        <span class="stats-row-label"><span class="dot" style="background:${getTypeColor(typeId)}"></span>${getTypeName(typeId)}</span>
+        <span class="stats-row-nums">${done}/${total}${total > 0 ? " · " + pct + "%" : ""}</span>
+      `;
+      const track = document.createElement("div");
+      track.className = "stats-bar-track";
+      const fill = document.createElement("div");
+      fill.className = "stats-bar-fill";
+      fill.style.width = pct + "%";
+      fill.style.background = getTypeColor(typeId);
+      track.appendChild(fill);
+      row.appendChild(top);
+      row.appendChild(track);
+      statsCardEl.appendChild(row);
+    });
+
+    const goalsThisMonth = allItems.cele.filter(it => it.done && isThisMonth(it.completedAt)).length;
+    const monthBox = document.createElement("div");
+    monthBox.className = "stats-month-box";
+    monthBox.innerHTML = `
+      <div>
+        <div class="stats-month-number">${goalsThisMonth}</div>
+      </div>
+      <div class="stats-month-label">${goalsThisMonth === 1 ? "cel osiągnięty" : "cele osiągnięte"} w tym miesiącu 🎯</div>
+    `;
+    statsCardEl.appendChild(monthBox);
+  }
+
+  function openStats() {
+    renderStats();
+    statsOverlayEl.classList.add("show");
+  }
+  function closeStats() {
+    statsOverlayEl.classList.remove("show");
+  }
+  statsBtnEl.innerHTML = statsSvg();
+  statsBtnEl.onclick = openStats;
+  statsOverlayEl.addEventListener("click", (e) => {
+    if (e.target === statsOverlayEl) closeStats();
+  });
+
+  function renderThemeToggle() {
+    themeToggleEl.innerHTML = theme === "dark" ? sunSvg() : moonSvg();
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute("content", theme === "dark" ? "#211D17" : "#F6F2EA");
+  }
+  themeToggleEl.onclick = () => {
+    theme = theme === "dark" ? "light" : "dark";
+    document.body.classList.toggle("dark", theme === "dark");
+    localStorage.setItem(KEY_THEME, theme);
+    renderThemeToggle();
+  };
+  renderThemeToggle();
 
   function checkSvg() {
     return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
@@ -348,24 +736,100 @@
     return `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="5" r="1.6"/><circle cx="16" cy="5" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/></svg>`;
   }
 
+  const CAT_ICONS = {
+    cart: `<path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L22 6H6"/><circle cx="9" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>`,
+    coffee: `<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>`,
+    home: `<path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/>`,
+    heart: `<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/>`,
+    dollar: `<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>`,
+    gift: `<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>`,
+    book: `<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>`,
+    briefcase: `<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>`,
+    star: `<polygon points="12 2 15.09 8.63 22 9.24 16.5 14.14 18.18 21 12 17.27 5.82 21 7.5 14.14 2 9.24 8.91 8.63 12 2"/>`,
+    wrench: `<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/>`,
+    car: `<path d="M3 13l2-6a2 2 0 0 1 2-1h10a2 2 0 0 1 2 1l2 6"/><rect x="1" y="13" width="22" height="6" rx="2"/><circle cx="7" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>`,
+    plane: `<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>`,
+    balloon: `<circle cx="12" cy="8" r="5"/><path d="M12 13v9"/><path d="M9 22h6"/>`,
+    dumbbell: `<circle cx="6" cy="12" r="3"/><circle cx="18" cy="12" r="3"/><line x1="9" y1="12" x2="15" y2="12"/>`,
+    music: `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>`,
+    camera: `<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>`,
+  };
+  function catIconSvg(iconId, size = 13) {
+    if (!iconId || !CAT_ICONS[iconId]) return "";
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${CAT_ICONS[iconId]}</svg>`;
+  }
+
+  function sunSvg() {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+  }
+  function moonSvg() {
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  }
+  function statsSvg() {
+    return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5"/><rect x="12" y="9" width="3" height="9"/><rect x="17" y="6" width="3" height="12"/></svg>`;
+  }
+  function xMarkSvg(size = 16) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+  }
+
   function nextColor() {
     const used = allCats[activeType].map(c => c.color);
     return PALETTE.find(c => !used.includes(c)) || PALETTE[allCats[activeType].length % PALETTE.length];
   }
 
+  let editingTypeLabel = null;
+
   function renderTabs() {
     tabsEl.innerHTML = "";
     Object.keys(TYPES).forEach(typeId => {
-      const t = TYPES[typeId];
+      if (editingTypeLabel === typeId) {
+        const input = document.createElement("input");
+        input.className = "tab-edit-input";
+        input.value = getTypeName(typeId);
+        const commit = () => {
+          const val = input.value.trim();
+          if (val) { typeLabels[typeId] = val; saveTypeLabels(); }
+          editingTypeLabel = null;
+          renderAll();
+        };
+        input.addEventListener("keydown", e => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") { editingTypeLabel = null; renderTabs(); }
+        });
+        input.addEventListener("blur", commit);
+        tabsEl.appendChild(input);
+        setTimeout(() => { input.focus(); input.select(); }, 0);
+        return;
+      }
+
       const btn = document.createElement("button");
       btn.className = "tab" + (typeId === activeType ? " active" : "");
-      btn.textContent = t.label;
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = getTypeName(typeId);
+      btn.appendChild(labelSpan);
+
+      if (typeId === activeType) {
+        const editIcon = document.createElement("span");
+        editIcon.className = "tab-edit-icon";
+        editIcon.innerHTML = pencilSvg();
+        editIcon.onclick = (e) => {
+          e.stopPropagation();
+          editingTypeLabel = typeId;
+          renderTabs();
+        };
+        btn.appendChild(editIcon);
+      }
+
       btn.onclick = () => {
         activeType = typeId;
         activeCategory = allCats[activeType][0]?.id || null;
         manageMode = false;
         addingCategory = false;
+        addingTemplate = false;
+        editingCatId = null;
+        typeIconPickerOpen = false;
         newPriority = false;
+        newDueDate = null;
         saveType();
         renderAll();
       };
@@ -375,10 +839,34 @@
 
   function renderHeader() {
     const t = TYPES[activeType];
-    iconBadgeEl.style.background = t.badgeColor;
-    iconBadgeEl.innerHTML = t.icon;
-    titleEl.textContent = t.title;
+    iconBadgeEl.style.background = getTypeColor(activeType);
+    iconBadgeEl.innerHTML = getTypeIconHTML(activeType, 22);
+    titleEl.textContent = getTypeName(activeType);
     inputEl.placeholder = t.placeholder;
+
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.className = "badge-color-input";
+    colorInput.value = getTypeColor(activeType);
+    colorInput.setAttribute("aria-label", "Zmień kolor listy");
+    colorInput.onchange = () => {
+      if (!typeStyles[activeType]) typeStyles[activeType] = {};
+      typeStyles[activeType].color = colorInput.value;
+      saveTypeStyles();
+      renderHeader();
+    };
+    iconBadgeEl.appendChild(colorInput);
+
+    const iconEditBtn = document.createElement("button");
+    iconEditBtn.className = "badge-icon-edit";
+    iconEditBtn.setAttribute("aria-label", "Zmień ikonę listy");
+    iconEditBtn.innerHTML = pencilSvg();
+    iconEditBtn.onclick = (e) => {
+      e.stopPropagation();
+      typeIconPickerOpen = !typeIconPickerOpen;
+      renderTypeIconPopover();
+    };
+    iconBadgeEl.appendChild(iconEditBtn);
 
     const items = allItems[activeType];
     const remaining = items.filter(it => !it.done).length;
@@ -389,6 +877,42 @@
       : `${t.remainingLabel}: ${remaining}`;
   }
 
+  let typeIconPickerOpen = false;
+
+  function renderTypeIconPopover() {
+    typeIconPopoverEl.innerHTML = "";
+    if (!typeIconPickerOpen) return;
+
+    const popover = document.createElement("div");
+    popover.className = "icon-popover";
+
+    const noneBtn = document.createElement("button");
+    noneBtn.className = "none-opt";
+    noneBtn.textContent = "Domyśl.";
+    noneBtn.onclick = () => {
+      if (typeStyles[activeType]) typeStyles[activeType].icon = null;
+      typeIconPickerOpen = false;
+      saveTypeStyles();
+      renderHeader(); renderTypeIconPopover();
+    };
+    popover.appendChild(noneBtn);
+
+    Object.keys(CAT_ICONS).forEach(iconId => {
+      const btn = document.createElement("button");
+      btn.innerHTML = catIconSvg(iconId, 16);
+      btn.onclick = () => {
+        if (!typeStyles[activeType]) typeStyles[activeType] = {};
+        typeStyles[activeType].icon = iconId;
+        typeIconPickerOpen = false;
+        saveTypeStyles();
+        renderHeader(); renderTypeIconPopover();
+      };
+      popover.appendChild(btn);
+    });
+
+    typeIconPopoverEl.appendChild(popover);
+  }
+
   function renderOptions() {
     optionsRowEl.innerHTML = "";
 
@@ -397,6 +921,28 @@
     starBtn.innerHTML = `${starSvg(newPriority)} Priorytet`;
     starBtn.onclick = () => { newPriority = !newPriority; renderOptions(); };
     optionsRowEl.appendChild(starBtn);
+
+    const dateOpt = document.createElement("div");
+    dateOpt.className = "opt-toggle" + (newDueDate ? " date-on" : "");
+    dateOpt.style.position = "relative";
+    if (newDueDate) {
+      dateOpt.innerHTML = `${calendarSvg()} ${formatShortDate(newDueDate)}`;
+      const clearBtn = document.createElement("button");
+      clearBtn.className = "clear-x";
+      clearBtn.innerHTML = xSvg("currentColor", 11);
+      clearBtn.onclick = (e) => { e.stopPropagation(); newDueDate = null; renderOptions(); };
+      dateOpt.appendChild(clearBtn);
+    } else {
+      dateOpt.innerHTML = `${calendarSvg()} Termin`;
+      const dateInput = document.createElement("input");
+      dateInput.type = "date";
+      dateInput.className = "date-overlay-input";
+      dateInput.onchange = () => {
+        if (dateInput.value) { newDueDate = dateInput.value; renderOptions(); }
+      };
+      dateOpt.appendChild(dateInput);
+    }
+    optionsRowEl.appendChild(dateOpt);
   }
 
   function renderManageBtn() {
@@ -407,6 +953,7 @@
     manageBtnEl.onclick = () => {
       manageMode = !manageMode;
       addingCategory = false;
+      editingCatId = null;
       renderChips();
     };
   }
@@ -425,7 +972,7 @@
           chip.style.background = cat.color;
           chip.style.borderColor = cat.color;
         }
-        chip.innerHTML = `<span>${cat.label}</span>`;
+        chip.innerHTML = `${catIconSvg(cat.icon, 13)}<span>${cat.label}</span>`;
         chip.onclick = () => { activeCategory = cat.id; renderChips(); };
         chipsEl.appendChild(chip);
       });
@@ -473,45 +1020,143 @@
     }
   }
 
-  function renderManageList() {
-    const list = document.createElement("div");
-    list.className = "cat-manage-list";
-    const cats = allCats[activeType];
+  function makeColorSwatch(cat) {
+    const swatch = document.createElement("div");
+    swatch.className = "cat-color-swatch";
+    swatch.style.background = cat.color;
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = cat.color;
+    colorInput.setAttribute("aria-label", "Zmień kolor kategorii");
+    colorInput.onchange = () => {
+      cat.color = colorInput.value;
+      swatch.style.background = cat.color;
+      saveCats();
+      renderList(); renderHeader();
+    };
+    swatch.appendChild(colorInput);
+    return swatch;
+  }
 
-    cats.forEach(cat => {
-      const row = document.createElement("div");
-      row.className = "cat-row";
-      row.dataset.catId = cat.id;
+  let editingCatId = null;
+  let iconPickerCatId = null;
 
-      const handle = document.createElement("div");
-      handle.className = "drag-handle";
-      handle.innerHTML = handleSvg();
-      handle.onpointerdown = (e) => startDrag(e, cat.id);
-      row.appendChild(handle);
+  function buildCatRow(cat, isDragging, container) {
+    const row = document.createElement("div");
+    row.className = "cat-row" + (isDragging ? " dragging" : "");
+    row.dataset.catId = cat.id;
 
-      const dot = document.createElement("span");
-      dot.className = "dot";
-      dot.style.background = cat.color;
-      row.appendChild(dot);
+    const handle = document.createElement("div");
+    handle.className = "drag-handle";
+    handle.innerHTML = handleSvg();
+    handle.onpointerdown = (e) => startDrag(e, cat.id);
+    row.appendChild(handle);
 
+    const dot = makeColorSwatch(cat);
+    row.appendChild(dot);
+
+    const iconBtn = document.createElement("button");
+    iconBtn.className = "cat-icon-btn" + (cat.icon ? " set" : "");
+    iconBtn.setAttribute("aria-label", "Zmień ikonę kategorii");
+    if (cat.icon) {
+      iconBtn.style.background = cat.color;
+      iconBtn.innerHTML = catIconSvg(cat.icon, 12);
+    } else {
+      iconBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
+    }
+    iconBtn.onclick = () => {
+      iconPickerCatId = iconPickerCatId === cat.id ? null : cat.id;
+      renderManageListPreservingDrag();
+    };
+    row.appendChild(iconBtn);
+
+    if (editingCatId === cat.id) {
+      const input = document.createElement("input");
+      input.className = "cat-row-edit-input";
+      input.value = cat.label;
+      const commit = () => {
+        const val = input.value.trim();
+        if (val) cat.label = val;
+        editingCatId = null;
+        saveCats();
+        renderManageListPreservingDrag();
+        renderList(); renderHeader();
+      };
+      const cancel = () => { editingCatId = null; renderManageListPreservingDrag(); };
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") commit();
+        if (e.key === "Escape") cancel();
+      });
+      input.addEventListener("blur", commit);
+      row.appendChild(input);
+      setTimeout(() => { input.focus(); input.select(); }, 0);
+    } else {
       const label = document.createElement("span");
       label.className = "cat-row-label";
       label.textContent = cat.label;
+      label.onclick = () => { editingCatId = cat.id; renderManageListPreservingDrag(); };
       row.appendChild(label);
 
-      const del = document.createElement("button");
-      del.className = "cat-row-del";
-      del.innerHTML = xSvg("#C1440E", 15);
-      del.onclick = () => deleteCategory(cat.id);
-      row.appendChild(del);
+      const editBtn = document.createElement("button");
+      editBtn.className = "cat-row-edit-btn";
+      editBtn.innerHTML = pencilSvg();
+      editBtn.setAttribute("aria-label", "Zmień nazwę kategorii");
+      editBtn.onclick = () => { editingCatId = cat.id; renderManageListPreservingDrag(); };
+      row.appendChild(editBtn);
+    }
 
-      list.appendChild(row);
+    const del = document.createElement("button");
+    del.className = "cat-row-del";
+    del.innerHTML = xSvg("#C1440E", 15);
+    del.onclick = () => deleteCategory(cat.id);
+    row.appendChild(del);
+
+    container.appendChild(row);
+
+    if (iconPickerCatId === cat.id) {
+      const popover = document.createElement("div");
+      popover.className = "icon-popover";
+
+      const noneBtn = document.createElement("button");
+      noneBtn.className = "none-opt";
+      noneBtn.textContent = "Brak";
+      noneBtn.onclick = () => {
+        cat.icon = null;
+        iconPickerCatId = null;
+        saveCats();
+        renderManageListPreservingDrag();
+        renderList(); renderHeader();
+      };
+      popover.appendChild(noneBtn);
+
+      Object.keys(CAT_ICONS).forEach(iconId => {
+        const btn = document.createElement("button");
+        btn.innerHTML = catIconSvg(iconId, 16);
+        btn.onclick = () => {
+          cat.icon = iconId;
+          iconPickerCatId = null;
+          saveCats();
+          renderManageListPreservingDrag();
+          renderList(); renderHeader();
+        };
+        popover.appendChild(btn);
+      });
+
+      container.appendChild(popover);
+    }
+  }
+
+  function renderManageList() {
+    const list = document.createElement("div");
+    list.className = "cat-manage-list";
+    allCats[activeType].forEach(cat => {
+      buildCatRow(cat, false, list);
     });
-
     chipsEl.appendChild(list);
   }
 
   let dragState = null;
+  let editingId = null;
 
   function startDrag(e, catId) {
     e.preventDefault();
@@ -524,7 +1169,7 @@
 
     const ghost = document.createElement("div");
     ghost.className = "drag-ghost";
-    ghost.innerHTML = `<span class="dot" style="background:${cat.color}"></span>${cat.label}`;
+    ghost.innerHTML = `<span class="group-dot" style="background:${cat.color}">${catIconSvg(cat.icon, 9)}</span>${cat.label}`;
     document.body.appendChild(ghost);
     positionGhost(ghost, e.clientX, e.clientY);
 
@@ -575,33 +1220,8 @@
     if (!listEl) return;
     listEl.innerHTML = "";
     allCats[activeType].forEach(cat => {
-      const row = document.createElement("div");
-      row.className = "cat-row" + (dragState && dragState.catId === cat.id ? " dragging" : "");
-      row.dataset.catId = cat.id;
-
-      const handle = document.createElement("div");
-      handle.className = "drag-handle";
-      handle.innerHTML = handleSvg();
-      handle.onpointerdown = (e) => startDrag(e, cat.id);
-      row.appendChild(handle);
-
-      const dot = document.createElement("span");
-      dot.className = "dot";
-      dot.style.background = cat.color;
-      row.appendChild(dot);
-
-      const label = document.createElement("span");
-      label.className = "cat-row-label";
-      label.textContent = cat.label;
-      row.appendChild(label);
-
-      const del = document.createElement("button");
-      del.className = "cat-row-del";
-      del.innerHTML = xSvg("#C1440E", 15);
-      del.onclick = () => deleteCategory(cat.id);
-      row.appendChild(del);
-
-      listEl.appendChild(row);
+      const isDragging = dragState && dragState.catId === cat.id;
+      buildCatRow(cat, isDragging, listEl);
     });
   }
 
@@ -625,7 +1245,13 @@
     const cats = allCats[activeType];
     contentEl.innerHTML = "";
 
-    const sortedItems = [...items].sort((a, b) => (!!b.priority) - (!!a.priority));
+    const sortedItems = [...items].sort((a, b) => {
+      const p = (!!b.priority) - (!!a.priority);
+      if (p !== 0) return p;
+      const aDate = a.dueDate || "9999-99-99";
+      const bDate = b.dueDate || "9999-99-99";
+      return aDate < bDate ? -1 : aDate > bDate ? 1 : 0;
+    });
 
     const groups = cats.map(cat => ({
       ...cat,
@@ -643,7 +1269,7 @@
 
       const label = document.createElement("div");
       label.className = "group-label";
-      label.innerHTML = `<span class="dot" style="background:${group.color}"></span>${group.label}`;
+      label.innerHTML = `<span class="group-dot" style="background:${group.color}">${catIconSvg(group.icon, 9)}</span>${group.label}`;
       groupDiv.appendChild(label);
 
       const listCard = document.createElement("div");
@@ -660,16 +1286,82 @@
         checkBtn.innerHTML = item.done ? checkSvg() : "";
         checkBtn.onclick = () => {
           item.done = !item.done;
+          item.completedAt = item.done ? new Date().toISOString() : null;
           saveItems(); renderList(); renderHeader();
         };
 
         const body = document.createElement("div");
         body.className = "item-body";
 
-        const text = document.createElement("span");
-        text.className = "item-text" + (item.done ? " done" : "");
-        text.textContent = item.text;
-        body.appendChild(text);
+        if (editingId === item.id) {
+          const input = document.createElement("input");
+          input.className = "item-edit-input";
+          input.value = item.text;
+          const commit = () => {
+            const val = input.value.trim();
+            if (val) item.text = val;
+            editingId = null;
+            saveItems(); renderList();
+          };
+          const cancel = () => { editingId = null; renderList(); };
+          input.addEventListener("keydown", e => {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") cancel();
+          });
+          input.addEventListener("blur", commit);
+          body.appendChild(input);
+          setTimeout(() => { input.focus(); input.select(); }, 0);
+        } else {
+          const text = document.createElement("span");
+          text.className = "item-text" + (item.done ? " done" : "");
+          text.textContent = item.text;
+          text.onclick = () => { editingId = item.id; renderList(); };
+          body.appendChild(text);
+        }
+
+        if (item.dueDate) {
+          const status = item.done ? "normal" : dueStatus(item.dueDate);
+          const badge = document.createElement("div");
+          badge.className = "due-badge" + (status !== "normal" ? " " + status : "");
+          badge.innerHTML = `${calendarSvg(11)}${status === "overdue" ? " Po terminie:" : ""} ${formatShortDate(item.dueDate)}`;
+          const dateInput = document.createElement("input");
+          dateInput.type = "date";
+          dateInput.className = "date-overlay-input";
+          dateInput.value = item.dueDate;
+          dateInput.onchange = () => {
+            if (dateInput.value) { item.dueDate = dateInput.value; saveItems(); renderList(); }
+          };
+          badge.appendChild(dateInput);
+          const clearBtn = document.createElement("button");
+          clearBtn.className = "clear-x";
+          clearBtn.innerHTML = xSvg("currentColor", 10);
+          clearBtn.onclick = (e) => {
+            e.stopPropagation();
+            item.dueDate = null;
+            saveItems(); renderList();
+          };
+          badge.appendChild(clearBtn);
+          body.appendChild(badge);
+        } else {
+          const addDate = document.createElement("div");
+          addDate.className = "due-badge";
+          addDate.style.color = "#B0A98F";
+          addDate.innerHTML = `${calendarSvg(11)} Dodaj termin`;
+          const dateInput = document.createElement("input");
+          dateInput.type = "date";
+          dateInput.className = "date-overlay-input";
+          dateInput.onchange = () => {
+            if (dateInput.value) { item.dueDate = dateInput.value; saveItems(); renderList(); }
+          };
+          addDate.appendChild(dateInput);
+          body.appendChild(addDate);
+        }
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "edit-btn";
+        editBtn.setAttribute("aria-label", "Edytuj");
+        editBtn.innerHTML = pencilSvg();
+        editBtn.onclick = () => { editingId = item.id; renderList(); };
 
         const starBtn = document.createElement("button");
         starBtn.className = "star-btn" + (item.priority ? " on" : "");
@@ -685,8 +1377,9 @@
         const picker = document.createElement("div");
         picker.className = "cat-picker";
         const dotVisual = document.createElement("div");
-        dotVisual.className = "cat-dot-visual";
+        dotVisual.className = "cat-dot-visual" + (group.icon ? " has-icon" : "");
         dotVisual.style.background = group.color;
+        if (group.icon) dotVisual.innerHTML = catIconSvg(group.icon, 11);
         const select = document.createElement("select");
         select.className = "cat-select";
         select.setAttribute("aria-label", "Zmień kategorię");
@@ -714,6 +1407,7 @@
 
         row.appendChild(checkBtn);
         row.appendChild(body);
+        row.appendChild(editBtn);
         row.appendChild(starBtn);
         row.appendChild(picker);
         row.appendChild(delBtn);
@@ -744,10 +1438,12 @@
       text: val,
       category: activeCategory,
       done: false,
-      priority: newPriority
+      priority: newPriority,
+      dueDate: newDueDate
     });
     inputEl.value = "";
     newPriority = false;
+    newDueDate = null;
     saveItems();
     renderOptions(); renderList(); renderHeader();
     inputEl.focus();
@@ -756,22 +1452,138 @@
   document.getElementById("add-btn").onclick = addItem;
   inputEl.addEventListener("keydown", e => { if (e.key === "Enter") addItem(); });
 
+  function renderTemplatesPanel() {
+    templatesPanelEl.innerHTML = "";
+    const templates = allTemplates[activeType];
+
+    if (templates.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "tpl-empty";
+      empty.textContent = "Brak zapisanych szablonów dla tej listy.";
+      templatesPanelEl.appendChild(empty);
+    } else {
+      const list = document.createElement("div");
+      list.className = "tpl-list";
+      templates.forEach(tpl => {
+        const row = document.createElement("div");
+        row.className = "tpl-row";
+
+        const info = document.createElement("div");
+        info.className = "tpl-info";
+        const name = document.createElement("span");
+        name.className = "tpl-name";
+        name.textContent = tpl.name;
+        const count = document.createElement("span");
+        count.className = "tpl-count";
+        count.textContent = `${tpl.items.length} ${tpl.items.length === 1 ? "pozycja" : "pozycji"}`;
+        info.appendChild(name);
+        info.appendChild(count);
+        row.appendChild(info);
+
+        const applyBtn = document.createElement("button");
+        applyBtn.className = "tpl-apply-btn";
+        applyBtn.textContent = "Dodaj";
+        applyBtn.onclick = () => applyTemplate(tpl);
+        row.appendChild(applyBtn);
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "tpl-del-btn";
+        delBtn.innerHTML = xSvg("#C1440E", 15);
+        delBtn.onclick = () => deleteTemplate(tpl.id);
+        row.appendChild(delBtn);
+
+        list.appendChild(row);
+      });
+      templatesPanelEl.appendChild(list);
+    }
+
+    if (addingTemplate) {
+      const row = document.createElement("div");
+      row.className = "tpl-save-row";
+      const input = document.createElement("input");
+      input.className = "tpl-save-input";
+      input.placeholder = "Nazwa szablonu, np. Cotygodniowe zakupy";
+      const confirm = document.createElement("button");
+      confirm.className = "new-cat-confirm";
+      confirm.innerHTML = checkSvg();
+      const commit = () => {
+        const val = input.value.trim();
+        if (val) saveCurrentAsTemplate(val);
+        addingTemplate = false;
+        renderTemplatesPanel();
+      };
+      confirm.onclick = commit;
+      input.addEventListener("keydown", e => { if (e.key === "Enter") commit(); if (e.key === "Escape") { addingTemplate = false; renderTemplatesPanel(); } });
+      row.appendChild(input);
+      row.appendChild(confirm);
+      templatesPanelEl.appendChild(row);
+      setTimeout(() => input.focus(), 0);
+    } else {
+      const saveBtn = document.createElement("button");
+      saveBtn.className = "tpl-save-btn";
+      saveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Zapisz obecną listę jako szablon`;
+      saveBtn.onclick = () => {
+        if (allItems[activeType].length === 0) {
+          showToast("Lista jest pusta — nie ma co zapisać");
+          return;
+        }
+        addingTemplate = true;
+        renderTemplatesPanel();
+      };
+      templatesPanelEl.appendChild(saveBtn);
+    }
+  }
+
+  function saveCurrentAsTemplate(name) {
+    const items = allItems[activeType].map(it => ({
+      text: it.text,
+      category: it.category,
+      priority: !!it.priority
+    }));
+    allTemplates[activeType].push({
+      id: "tpl-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      name,
+      items
+    });
+    saveTemplates();
+    showToast(`Zapisano szablon „${name}"`);
+  }
+
+  function applyTemplate(tpl) {
+    const validCatIds = allCats[activeType].map(c => c.id);
+    const fallbackCat = validCatIds[0];
+    tpl.items.forEach(it => {
+      allItems[activeType].push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2, 4),
+        text: it.text,
+        category: validCatIds.includes(it.category) ? it.category : fallbackCat,
+        done: false,
+        priority: !!it.priority,
+        dueDate: null
+      });
+    });
+    saveItems();
+    renderList(); renderHeader();
+    showToast(`Dodano szablon „${tpl.name}"`);
+  }
+
+  function deleteTemplate(id) {
+    allTemplates[activeType] = allTemplates[activeType].filter(t => t.id !== id);
+    saveTemplates();
+    renderTemplatesPanel();
+  }
+
   function renderAll() {
     renderTabs();
     renderHeader();
     renderOptions();
     renderManageBtn();
     renderChips();
+    renderTemplatesPanel();
     renderList();
   }
 
   renderAll();
-
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
-    });
-  }
 </script>
 </body>
 </html>
