@@ -17,7 +17,7 @@ HTML / CSS / JavaScript — bez frameworków, czysty (vanilla) kod.
 localStorage — trwałe przechowywanie danych po stronie klienta.
 PWA — manifest.json + service worker (sw.js) dla instalowalności i działania offline.
 Responsywny design zaprojektowany mobile-first.
-Struktura projektu
+Struktura projektu:
 ├── index.html      # cała logika i interfejs aplikacji
 ├── manifest.json    # metadane PWA (nazwa, ikony, kolory)
 ├── sw.js             # service worker — cache i obsługa offline
